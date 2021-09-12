@@ -9,11 +9,11 @@ write-host "Chargement de donnees user" -foregroundcolor green
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 
 $flagShowDeployPhases = $false
-$flagShowVariables = $false
+$flagShowVariables = $true
 
-$filtreProject = "" #projet1/projet2
+$filtreProject = "simba" #projet1/projet2
 $filtreProjetEnvironnement = "" #integ/recette/prod
-$filtreVariableNom = "" #connexion
+$filtreVariableNom = "host" #connexion
 $filtreVariableValeur = "" #server
 
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/get?view=azure-devops-rest-6.0
