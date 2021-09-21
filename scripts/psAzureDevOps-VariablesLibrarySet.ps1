@@ -13,16 +13,16 @@ $filtreProjet = "simba - integ"
 $filtreProjetID = 9
 
 $variableAAjouterOuModifier = @{}
-$variableAAjouterOuModifier.Add("ApplicationCode", "SimbaProject MODIFICATION")
+#$variableAAjouterOuModifier.Add("ApplicationCode", "SimbaProject MODIFICATION")
 #$variableAAjouterOuModifier.Add("ApplicationCodePostit", "SimbaProject")
-$variableAAjouterOuModifier.Add("LOG4NET_SOURCETECH_APIEXTERNAL", @{value= "Simba-ApiExternal-INTEG"})
-$variableAAjouterOuModifier.Add("LOG4NET_SOURCETFONC_APIEXTERNAL", @{value= "Simba-ApiExternal-INTEG"})
+#$variableAAjouterOuModifier.Add("LOG4NET_SOURCETECH_APIEXTERNAL", @{value= "Simba-ApiExternal-INTEG"})
+#$variableAAjouterOuModifier.Add("LOG4NET_SOURCETFONC_APIEXTERNAL", @{value= "Simba-ApiExternal-INTEG"})
 
 
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups/get-variable-groups?view=azure-devops-rest-6.0
 #GET https://dev.azure.com/{organization}/{project}/_apis/distributedtask/variablegroups?api-version=6.0-preview.2
 $response = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/distributedtask/variablegroups/$($filtreProjetID)?groupName=*$filtreProjet*&api-version=6.0-preview.2" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
-write-host $($response) ""
+#write-host $($response) ""
 
 if( $response -ne $null -and $response.name -eq "$filtreProjet" -and $response.id -eq $filtreProjetID ){
     write-host "$($response.name) (id#$($response.id))"
@@ -60,7 +60,7 @@ if( $response -ne $null -and $response.name -eq "$filtreProjet" -and $response.i
         
         }
     }else{
-        write-host "rien à faire " -ForegroundColor Cyan
+        write-host "rien à faire " -ForegroundColor DarkMagenta
     }
 }
 

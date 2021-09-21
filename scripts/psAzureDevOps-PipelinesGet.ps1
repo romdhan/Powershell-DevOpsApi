@@ -9,14 +9,14 @@ write-host "Chargement de donnees user" -foregroundcolor green
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 
 #list of flags
-$flagNombreMaxPipeline = $getpipelines_flagNombreMaxPipeline
-$flagShowDeployPhases = $getpipelines_flagShowDeployPhases
-$flagShowVariables = $getpipelines_flagShowVariables
-$flagRunPipeline_id = $getpipelines_flagRunPipeline_id
+$flagNombreMaxPipeline = $pipelinesget_flagNombreMaxPipeline
+$flagShowDeployPhases =  $pipelinesget_flagShowDeployPhases
+$flagShowVariables =     $pipelinesget_flagShowVariables
+$flagRunPipeline_id =    $pipelinesget_flagRunPipeline_id
 #list of filters
-$filtreProject = $getpipelines_filtreProject
-$filtreState = $getpipelines_filtreState
-$filtreResult = $getpipelines_filtreResult
+$filtreProject = $pipelinesget_filtreProject
+$filtreState =   $pipelinesget_filtreState
+$filtreResult =  $pipelinesget_filtreResult
 
 #$flagNombreMaxPipeline = 5
 #$flagShowDeployPhases = $false
