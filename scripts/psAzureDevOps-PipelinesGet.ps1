@@ -8,17 +8,23 @@ write-host "Chargement de donnees user" -foregroundcolor green
 
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 
+#list of flags
+$flagNombreMaxPipeline = $pipelinesget_flagNombreMaxPipeline
+$flagShowDeployPhases =  $pipelinesget_flagShowDeployPhases
+$flagShowVariables =     $pipelinesget_flagShowVariables
+$flagRunPipeline_id =    $pipelinesget_flagRunPipeline_id
+#list of filters
+$filtreProject = $pipelinesget_filtreProject
+$filtreState =   $pipelinesget_filtreState
+$filtreResult =  $pipelinesget_filtreResult
 
-$flagNombreMaxPipeline = 5
-$flagShowDeployPhases = $false
-$flagShowVariables = $false
-
-$flagRunPipeline_id = 16
-
-$filtreProject = "" #projet1/projet2
-$filtreProjetEnvironnement = "" #integ/recette/prod
-$filtreState = "" #inprogress, completed
-$filtreResult = "" #succeeded,failed,
+#$flagNombreMaxPipeline = 5
+#$flagShowDeployPhases = $false
+#$flagShowVariables = $false
+#$flagRunPipeline_id = 16
+#$filtreProject = "" #projet1/projet2
+#$filtreState = "" #inprogress, completed
+#$filtreResult = "" #succeeded,failed,
 
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/get?view=azure-devops-rest-6.0
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/list?view=azure-devops-rest-5.1
@@ -30,8 +36,8 @@ foreach ($pipeline in $response.value){
         write-host $pipeline.name "($pipelineID)"
         
         if($flagRunPipeline_id -gt 0 -and $pipelineID -eq $flagRunPipeline_id){
+            write-host "   démarrage du pipeline ... " -ForegroundColor Green
             #POST https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs?api-version=6.0-preview.1
-            
             $body = "{}"
             $responePipelineRunExecute = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs?api-version=6.0-preview.1" -Method 'POST' -body $body -ContentType "application/json" -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}    
             $responePipelineRunExecute
