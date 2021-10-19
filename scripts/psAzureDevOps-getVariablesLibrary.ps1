@@ -9,9 +9,9 @@ write-host "Chargement de donnees user" -foregroundcolor green
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 
 
-$filtreProjet = "simba"
-$filtreProjetEnvironnement = "integ" #prod/recette/integ
-$filtreVariableNom = "applicationcode" #nom ou partie du nom de la variable
+$filtreProjet = "compareplus"
+$filtreProjetEnvironnement = "" #prod/recette/integ
+$filtreVariableNom = "" #nom ou partie du nom de la variable
 $filtreVariableValeur = "" #%valeur%
 
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups/get-variable-groups?view=azure-devops-rest-6.0
