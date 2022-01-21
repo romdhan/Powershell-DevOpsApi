@@ -12,7 +12,7 @@ $filtreProject = $reposget_filtreProjet
 #$filtreProject = "" #projet1/projet2
 
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/git/repositories/list?view=azure-devops-rest-4.1
-$response = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/git/repositories?includeLinks=true&includeAllUrls=true&includeHidden=true&api-version=4.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+$response = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/git/repositories?includeLinks=true&includeAllUrls=true&includeHidden=true&api-version=4.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
 write-host "$($response.count) repositori(es)"
 foreach ($repo in $response.value){
     if( $filtreProject -eq "" -or $repo.name -like "*$filtreProject*"){

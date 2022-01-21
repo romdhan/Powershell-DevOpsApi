@@ -9,14 +9,14 @@ write-host "Chargement de donnees user" -foregroundcolor green
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 
 
-$filtreProjet = "compareplus"
+$filtreProjet = ""
 $filtreProjetEnvironnement = "" #prod/recette/integ
 $filtreVariableNom = "" #nom ou partie du nom de la variable
 $filtreVariableValeur = "" #%valeur%
 
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/distributedtask/variablegroups/get-variable-groups?view=azure-devops-rest-6.0
 #GET https://dev.azure.com/{organization}/{project}/_apis/distributedtask/variablegroups?api-version=6.0-preview.2
-$response = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/distributedtask/variablegroups?groupName=*$filtreProjet*&api-version=6.0-preview.2" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+$response = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/distributedtask/variablegroups?groupName=*$filtreProjet*&api-version=6.0-preview.2" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
 write-host $($response.count) "variableGroupe"
 
 

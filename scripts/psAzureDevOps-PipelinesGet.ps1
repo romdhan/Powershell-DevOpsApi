@@ -13,10 +13,13 @@ $flagNombreMaxPipeline = $pipelinesget_flagNombreMaxPipeline
 $flagShowDeployPhases =  $pipelinesget_flagShowDeployPhases
 $flagShowVariables =     $pipelinesget_flagShowVariables
 $flagRunPipeline_id =    $pipelinesget_flagRunPipeline_id
+
 #list of filters
 $filtreProject = $pipelinesget_filtreProject
 $filtreState =   $pipelinesget_filtreState
 $filtreResult =  $pipelinesget_filtreResult
+
+$filtreNeverRun = $pipelinesget_filtreNeverRun #$null: nothing, $true:show pipeline with 0 runs, $false:hide pipeline with 0 runs
 
 #$flagNombreMaxPipeline = 5
 #$flagShowDeployPhases = $false
@@ -26,42 +29,78 @@ $filtreResult =  $pipelinesget_filtreResult
 #$filtreState = "" #inprogress, completed
 #$filtreResult = "" #succeeded,failed,
 
+if($filtreProject -ne ""){
+    write-host "*** recherche de $filtreProject" -ForegroundColor Yellow
+}
+
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/get?view=azure-devops-rest-6.0
 #https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/list?view=azure-devops-rest-5.1
-$response = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines?api-version=6.0-preview.1&searchText=$filtreProject" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+$response = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/pipelines?api-version=6.0-preview.1&searchText=$filtreProject" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
 
 foreach ($pipeline in $response.value){
     if( $filtreProject -eq "" -or $pipeline.name -like "*$filtreProject*"){
         $pipelineID = $pipeline.id
-        write-host $pipeline.name "($pipelineID)"
+        $strpipeline = $pipeline.name + "(#$pipelineID)"
+        if( $filtreNeverRun -in ($null)){
+            write-host $strpipeline
+        }
         
+        #run a defined pipeline
         if($flagRunPipeline_id -gt 0 -and $pipelineID -eq $flagRunPipeline_id){
             write-host "   démarrage du pipeline ... " -ForegroundColor Green
-            #POST https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs?api-version=6.0-preview.1
             $body = "{}"
-            $responePipelineRunExecute = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs?api-version=6.0-preview.1" -Method 'POST' -body $body -ContentType "application/json" -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}    
+            $responePipelineRunExecute = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/pipelines/$($pipelineID)/runs?api-version=6.0-preview.1" -Method 'POST' -body $body -ContentType "application/json" -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}    
             $responePipelineRunExecute
         }
-
+        
         #recup des deployPhases definition
-        $responsePipelineRuns = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
-        #write-host $responseDeployPhases.environments
-        foreach($rpr in $responsePipelineRuns.value | Select -First $flagNombreMaxPipeline ){
-            if( $filtreState -eq "" -or $rpr.state -like "*$filtreState*"){        
-                write-host "    $($rpr.name) - $($rpr.state) - " -NoNewline
-                if($rpr.result -eq "succeeded"){
-                    Write-Host "$($rpr.result)" -ForegroundColor Green
-                }elseif($rpr.result -eq "failed"){
-                    Write-Host "$($rpr.result)" -ForegroundColor Red
-                }else{
-                    Write-Host "$($rpr.result)" -ForegroundColor Magenta
+        if( $flagShowDeployPhases -eq $true){
+            $responsePipelineRuns = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/pipelines/$($pipelineID)/runs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+            #write-host $responseDeployPhases.environments
+            if($responsePipelineRuns.value.Count -gt 0){
+                if($filtreNeverRun -eq $false){
+                    write-host $strpipeline -NoNewline
                 }
-                #GET https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs/{runId}/logs?api-version=6.0-preview.1
-                #$responsePipelineRunLogs = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs/$($rpr.id)/logs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+                if($filtreNeverRun -in ($false, $null)){
+                    write-host "`t$($responsePipelineRuns.value.Count) builds runned" -ForegroundColor Magenta
+                    foreach($rpr in $responsePipelineRuns.value | Select -First $flagNombreMaxPipeline ){
+                        if( $filtreState -eq "" -or $rpr.state -like "*$filtreState*"){        
+                            write-host "    $($rpr.name) - $($rpr.state) - " -NoNewline
+                            if($rpr.result -eq "succeeded"){
+                                Write-Host "$($rpr.result)" -ForegroundColor Green
+                            }elseif($rpr.result -eq "failed"){
+                                Write-Host "$($rpr.result)" -ForegroundColor Red
+                            }else{
+                                Write-Host "$($rpr.result)" -ForegroundColor Magenta
+                            }
+                            #GET https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs/{runId}/logs?api-version=6.0-preview.1
+                            #$responsePipelineRunLogs = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs/$($rpr.id)/logs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+                        }
+                    }
+                }
+            }
+            else{
+                if($filtreNeverRun -eq $true){
+                    write-host $strpipeline -NoNewline
+                }
+                if( $filtreNeverRun -ne $false){
+                    write-host "`tnever runned" -ForegroundColor Red
+                }
             }
         }
 
-        
-    }
-   
+        #recup variables
+        if($flagShowVariables -eq $true){
+            write-host "   affichage des variables ... " -ForegroundColor Magenta
+            $responsePipelineDefinitions = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/build/definitions/$($pipelineID)?api-version=6.0" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+            #write-output $responsePipelineDefinitions
+            #return
+            foreach($rpr in $responsePipelineDefinitions.variables.PSObject.Properties){
+                write-host "   "$rpr.Name -NoNewline -ForegroundColor Cyan
+                #write-host " ($($libV.id))" -NoNewline
+                Write-Host " ==> " -NoNewline 
+                write-host $rpr.Value.value                   
+            }
+        }        
+    }   
 }
