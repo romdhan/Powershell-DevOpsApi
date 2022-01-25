@@ -11,6 +11,7 @@ $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0
 #list of flags
 $flagNombreMaxPipeline = $pipelinesget_flagNombreMaxPipeline
 $flagShowDeployPhases =  $pipelinesget_flagShowDeployPhases
+$flagShowDeployPhasesDetails = $pipelinesget_flagShowDeployPhasesDetails #show runs details/numbers
 $flagShowVariables =     $pipelinesget_flagShowVariables
 $flagRunPipeline_id =    $pipelinesget_flagRunPipeline_id
 
@@ -54,27 +55,54 @@ foreach ($pipeline in $response.value){
         }
         
         #recup des deployPhases definition
-        if( $flagShowDeployPhases -eq $true){
+        if( $flagShowDeployPhases -eq $true -or $flagShowDeployPhasesDetails -eq $true){
             $responsePipelineRuns = Invoke-RestMethod "$URL_DEVOPS_COMPLETE/_apis/pipelines/$($pipelineID)/runs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
             #write-host $responseDeployPhases.environments
             if($responsePipelineRuns.value.Count -gt 0){
-                if($filtreNeverRun -eq $false){
+                if($filtreNeverRun -eq $false){                    
                     write-host $strpipeline -NoNewline
                 }
                 if($filtreNeverRun -in ($false, $null)){
-                    write-host "`t$($responsePipelineRuns.value.Count) builds runned" -ForegroundColor Magenta
-                    foreach($rpr in $responsePipelineRuns.value | Select -First $flagNombreMaxPipeline ){
-                        if( $filtreState -eq "" -or $rpr.state -like "*$filtreState*"){        
-                            write-host "    $($rpr.name) - $($rpr.state) - " -NoNewline
-                            if($rpr.result -eq "succeeded"){
-                                Write-Host "$($rpr.result)" -ForegroundColor Green
-                            }elseif($rpr.result -eq "failed"){
-                                Write-Host "$($rpr.result)" -ForegroundColor Red
-                            }else{
-                                Write-Host "$($rpr.result)" -ForegroundColor Magenta
+                    $lastRunsResult = $($responsePipelineRuns.value | Sort-Object {$_.id} | Select-Object -Last 1).result
+                    $nbreRunsResultSucceded = $($responsePipelineRuns.value | Where-Object {$_.result -eq "succeeded"}).count
+                    $nbreRunsResultFailed = $($responsePipelineRuns.value | Where-Object {$_.result -eq "failed"}).count
+
+                    
+                    write-host "`t" -NoNewline
+                    if($lastRunsResult -eq "succeeded"){
+                        Write-Host "$($lastRunsResult)" -NoNewline -ForegroundColor Green
+                    }elseif($lastRunsResult -eq "failed"){
+                        Write-Host "$($lastRunsResult)" -NoNewline -ForegroundColor Red
+                    }else{
+                        Write-Host "$($lastRunsResult)" -NoNewline -ForegroundColor Magenta
+                    }
+
+                    write-host " [$($responsePipelineRuns.value.Count) : " -NoNewline -ForegroundColor Magenta
+                    Write-Host "$($nbreRunsResultSucceded) ok, " -NoNewline -ForegroundColor Green
+                    write-host "$($nbreRunsResultFailed) failed]" -ForegroundColor Red
+
+                    <#
+                    $col=@(                        
+                        [PSCustomObject]@{namepipeline=$strpipeline},
+                        [PSCustomObject]@{nbBuilds=$responsePipelineRuns.value.Count}
+                    )
+                    $col | Format-Table namepipeline,nbBuilds -AutoSize
+                    #>
+
+                    if( $flagShowDeployPhases -eq $true){
+                        foreach($rpr in $responsePipelineRuns.value | Select -First $flagNombreMaxPipeline ){
+                            if( $filtreState -eq "" -or $rpr.state -like "*$filtreState*"){        
+                                write-host "    $($rpr.name) - $($rpr.state) - " -NoNewline
+                                if($rpr.result -eq "succeeded"){
+                                    Write-Host "$($rpr.result)" -ForegroundColor Green
+                                }elseif($rpr.result -eq "failed"){
+                                    Write-Host "$($rpr.result)" -ForegroundColor Red
+                                }else{
+                                    Write-Host "$($rpr.result)" -ForegroundColor Magenta
+                                }
+                                #GET https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs/{runId}/logs?api-version=6.0-preview.1
+                                #$responsePipelineRunLogs = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs/$($rpr.id)/logs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
                             }
-                            #GET https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs/{runId}/logs?api-version=6.0-preview.1
-                            #$responsePipelineRunLogs = Invoke-RestMethod "https://dev.azure.com/$collection/$projectName/_apis/pipelines/$($pipelineID)/runs/$($rpr.id)/logs?api-version=6.0-preview.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
                         }
                     }
                 }
