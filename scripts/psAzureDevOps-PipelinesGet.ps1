@@ -19,6 +19,8 @@ $flagRunPipeline_id =    $pipelinesget_flagRunPipeline_id
 $filtreProject = $pipelinesget_filtreProject
 $filtreState =   $pipelinesget_filtreState
 $filtreResult =  $pipelinesget_filtreResult
+$filtreVariableNom = $pipelinesget_filtreVariableNom #nom ou partie du nom de la variable
+$filtreVariableValeur = $pipelinesget_filtreVariableValeur #%valeur%
 
 $filtreNeverRun = $pipelinesget_filtreNeverRun #$null: nothing, $true:show pipeline with 0 runs, $false:hide pipeline with 0 runs
 
@@ -42,7 +44,7 @@ foreach ($pipeline in $response.value){
     if( $filtreProject -eq "" -or $pipeline.name -like "*$filtreProject*"){
         $pipelineID = $pipeline.id
         $strpipeline = $pipeline.name + "(#$pipelineID)"
-        if( $filtreNeverRun -in ($null)){
+        if( $filtreNeverRun -in ($null) -or $flagShowVariables -eq $true){
             write-host $strpipeline
         }
         
@@ -124,10 +126,13 @@ foreach ($pipeline in $response.value){
             #write-output $responsePipelineDefinitions
             #return
             foreach($rpr in $responsePipelineDefinitions.variables.PSObject.Properties){
-                write-host "   "$rpr.Name -NoNewline -ForegroundColor Cyan
-                #write-host " ($($libV.id))" -NoNewline
-                Write-Host " ==> " -NoNewline 
-                write-host $rpr.Value.value                   
+
+                if( ($filtreVariableNom -eq "" -or $rpr.Name -like "*$($filtreVariableNom)*") -and ( $filtreVariableValeur -eq "" -or $rpr.Value.value -like "*$filtreVariableValeur*")){
+                    write-host "   "$rpr.Name -NoNewline -ForegroundColor Cyan
+                    #write-host " ($($libV.id))" -NoNewline
+                    Write-Host " ==> " -NoNewline 
+                    write-host $rpr.Value.value                   
+                }
             }
         }        
     }   

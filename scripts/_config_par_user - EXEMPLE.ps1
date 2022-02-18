@@ -26,6 +26,8 @@ $pipelinesget_filtreProject = "" #projet1/projet2
 $pipelinesget_filtreState = "" #inprogress, completed
 $pipelinesget_filtreResult = "" #succeeded,failed,
 $pipelinesget_filtreNeverRun = $false #$null: nothing, $true:show only pipelines with 0 runs, $false:hide pipeline with 0 runs
+$pipelinesget_filtreVariableNom = "" #nom ou partie du nom de la variable
+$pipelinesget_filtreVariableValeur = "" #%valeur%
 
 
 ##############################################################
