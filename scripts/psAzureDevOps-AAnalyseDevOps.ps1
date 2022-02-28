@@ -15,6 +15,8 @@ write-host "Chargement de donnees user" -foregroundcolor green
 
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 
+$flagShowRepos = $AAnalyseDevOps_flagShowRepos
+
 $getprojects = Invoke-RestMethod "$URL_DEVOPS_COLLECTION/_apis/projects?api-version=6.0" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
 
 if( $getprojects.value.Count -gt 0){
@@ -23,14 +25,31 @@ if( $getprojects.value.Count -gt 0){
         write-host "$($proj.name) (#$($proj.id))"
 
         # show all repositories
-        $getprojRepos = Invoke-RestMethod "$URL_DEVOPS_COLLECTION/$($proj.name)/_apis/git/repositories?includeLinks=true&includeAllUrls=true&includeHidden=true&api-version=4.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
-        if( $getprojRepos.value.Count -gt 0){
-            write-host "`t$($getprojRepos.value.Count) repositories found" -ForegroundColor Magenta
-            foreach ($projRepo in $getprojRepos.value){
-                write-host "`t$($projRepo.name)"
+        if( $flagShowRepos -eq $true){
+            $getprojRepos = Invoke-RestMethod "$URL_DEVOPS_COLLECTION/$($proj.name)/_apis/git/repositories?includeLinks=true&includeAllUrls=true&includeHidden=true&api-version=4.1" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+            if( $getprojRepos.value.Count -gt 0){
+                write-host "`t$($getprojRepos.value.Count) repositories found" -ForegroundColor Magenta
+                foreach ($projRepo in $getprojRepos.value){
+                    write-host "`t$($projRepo.name)"
+                }
+            }else{
+                write-host "`tNo repositories found" -ForegroundColor Red
             }
-        }else{
-            write-host "`tNo repositories found" -ForegroundColor Red
+        }
+
+        # show all pipelines
+        if($flagShowPipelines -eq $true){
+            $getprojPipelines = Invoke-RestMethod "$URL_DEVOPS_COLLECTION/$($proj.name)/_apis/pipelines?api-version=6.0-preview.1&searchText=$filtreProject" -Method 'GET' -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo)}
+            
+            foreach ($pipeline in $getprojPipelines.value){
+                if( $filtreProject -eq "" -or $pipeline.name -like "*$filtreProject*"){
+                    $pipelineID = $pipeline.id
+                    $strpipeline = $pipeline.name + "(#$pipelineID)"
+                    if( $filtreNeverRun -in ($null) -or $flagShowVariables -eq $true){
+                        write-host $strpipeline
+                    }
+                }
+            }
         }
     }
 }else{
