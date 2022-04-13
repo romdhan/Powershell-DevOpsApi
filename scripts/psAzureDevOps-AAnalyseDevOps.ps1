@@ -30,7 +30,7 @@ if( $getprojects.value.Count -gt 0){
             if( $getprojRepos.value.Count -gt 0){
                 write-host "`t$($getprojRepos.value.Count) repositories found" -ForegroundColor Magenta
                 foreach ($projRepo in $getprojRepos.value){
-                    write-host "`t$($projRepo.name)"
+                    write-host "`t$($projRepo.name) - ($($projRepo.remoteUrl))"
                 }
             }else{
                 write-host "`tNo repositories found" -ForegroundColor Red
