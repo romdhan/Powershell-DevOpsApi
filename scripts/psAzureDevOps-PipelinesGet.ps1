@@ -5,7 +5,7 @@ Remove-Variable * -ErrorAction SilentlyContinue
 #Chargement des variable globales
 $path = $PSScriptRoot
 $RootPath = Split-Path (Split-Path $path -Parent) -Parent
-write-host "Chargement de donnees user" -foregroundcolor green
+write-host "Chargement de donnees user ..." -foregroundcolor green
 . "$PSScriptRoot/_config_par_user.ps1"
 
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
@@ -36,6 +36,10 @@ $filtreOnlyLastFailed = $pipelinesget_filtreOnlyLastFailed #$null: nothing, $tru
 #$filtreProject = "" #projet1/projet2
 #$filtreState = "" #inprogress, completed
 #$filtreResult = "" #succeeded,failed,
+
+#intervention le 20220519
+$filtreProject = "*critical*"
+$flagShowVariables = $true
 
 if($filtreProject -ne ""){
     write-host "*** recherche de [Project] $filtreProject" -ForegroundColor Yellow
@@ -163,7 +167,7 @@ foreach ($pipeline in $response.value | Sort-Object {$_.name}){
       
         #recup variables
         if( $flagShowVariables -eq $true ){
-            write-host "   affichage des variables ... " -ForegroundColor Magenta
+            write-host "    affichage des variables ... " -ForegroundColor Magenta
             foreach($rpr in $pkgInfo.variables.PSObject.Properties | Sort-Object {$_.name} ){
                 if( ($filtreVariableNom -eq "" -or $rpr.Name -like "*$($filtreVariableNom)*") -and ( $filtreVariableValeur -eq "" -or $rpr.Value.value -like "*$filtreVariableValeur*")){
                     write-host "   "$rpr.Name -NoNewline -ForegroundColor Cyan
